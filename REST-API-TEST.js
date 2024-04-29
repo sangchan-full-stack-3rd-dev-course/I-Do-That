@@ -71,4 +71,18 @@ app.get('/books/:id', (req, res) => {
 
 });
 
+// 책 추가하기
+app.use(express.json());
+app.post("/books", (req, res) => {
+    let newBook = req.body;
+    let id = bookStore.size + 1;
+
+    // 책 추가
+    bookStore.set(id, newBook);
+    
+    const successMsg = `${bookStore.get(id).title}이 정상적으로 등록되었습니다!`;
+
+    res.json(successMsg);
+});
+
 app.listen(1997);
