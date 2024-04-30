@@ -76,7 +76,7 @@ app.use(express.json());
 app.post("/books", (req, res) => {
     let newBook = req.body;
     let id = bookStore.size + 1;
-
+    
     // 책 추가
     bookStore.set(id, newBook);
     
