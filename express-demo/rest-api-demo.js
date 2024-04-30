@@ -103,4 +103,21 @@ app.delete("/books/:id", (req, res) => {
     }
 });
 
+// 책 전체 삭제
+app.delete("/books", (req, res) => {
+    let message = "";
+
+    if (bookStore.size >= 1){
+        bookStore.clear();
+        message = "모든 도서가 성공적으로 검열되었습니다.";
+    } else {
+        message = "이미 모든 도서가 검열 된 상태입니다.";
+    }
+
+    res.json({
+        message : message
+    });
+
+});
+
 app.listen(1997);
