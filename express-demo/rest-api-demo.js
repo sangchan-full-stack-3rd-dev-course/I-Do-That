@@ -52,18 +52,17 @@ app.get('/books', (req, res) => {
 // 책 개별 조회
 app.get('/books/:id', (req, res) => {
     let {id} = req.params;
-
     id = parseInt(id)
+
+    let book = bookStore.get(id);
     
-    if (!bookStore.has(id)) {
+    if (book === undefined) {
         res.json({
             error : "해당 도서는 검열되었습니다."
         });
     } else {
         // bookStore에 존재하지 않는 id(key) 값일 때
         // Cannot set properties of undefined 에러가 발생하여 if-else로 구분함
-        let book = bookStore.get(id);
-
         book.id = id;
 
         res.json(book);
@@ -90,12 +89,13 @@ app.delete("/books/:id", (req, res) => {
     let {id} = req.params;
     id = parseInt(id);
 
-    if (!bookStore.has(id)) {
+    let book = bookStore.get(id);
+
+    if (book === undefined) {
         res.json({
             error : "해당 도서는 이미 검열되었습니다."
         });
     } else {
-        const book = bookStore.get(id);
         bookStore.delete(id);
         res.json({
             success : `[${book.title}] 이(가) 성공적으로 검열되었습니다.`
