@@ -67,7 +67,6 @@ app.get('/books/:id', (req, res) => {
         error : errorMessage,
         book : book
     });
-
 });
 
 // 책 추가하기
@@ -118,6 +117,31 @@ app.delete("/books", (req, res) => {
         message : message
     });
 
+});
+
+app.put("/books/:id", (req, res) => {
+    let {id} = req.params;
+    id = parseInt(id)
+
+    let errorMessage = "";
+    let successMessage = "";
+    let book = bookStore.get(id);
+    
+    if (book === undefined) {
+        errorMessage = "해당 도서는 검열되었습니다."
+    } else {
+        book.title = req.body.title
+
+        bookStore.set(id, book);
+
+        successMessage = `${book.title}이(가) 정상적으로 수정되었습니다!`;
+    }
+
+    res.json({
+        error : errorMessage,
+        success : successMessage,
+        book : book
+    });
 });
 
 app.listen(1997);
