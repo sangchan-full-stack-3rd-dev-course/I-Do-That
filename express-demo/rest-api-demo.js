@@ -54,19 +54,19 @@ app.get('/books/:id', (req, res) => {
     let {id} = req.params;
     id = parseInt(id)
 
+    let errorMessage = "";
     let book = bookStore.get(id);
     
     if (book === undefined) {
-        res.json({
-            error : "해당 도서는 검열되었습니다."
-        });
+        errorMessage = "해당 도서는 검열되었습니다."
     } else {
-        // bookStore에 존재하지 않는 id(key) 값일 때
-        // Cannot set properties of undefined 에러가 발생하여 if-else로 구분함
         book.id = id;
-
-        res.json(book);
     }
+
+    res.json({
+        error : errorMessage,
+        book : book
+    });
 
 });
 
