@@ -85,4 +85,22 @@ app.post("/books", (req, res) => {
     res.json(successMsg);
 });
 
+// 책 삭제하기
+app.delete("/books/:id", (req, res) => {
+    let {id} = req.params;
+    id = parseInt(id);
+
+    if (!bookStore.has(id)) {
+        res.json({
+            error : "해당 도서는 이미 검열되었습니다."
+        });
+    } else {
+        const book = bookStore.get(id);
+        bookStore.delete(id);
+        res.json({
+            success : `[${book.title}] 이(가) 성공적으로 검열되었습니다.`
+        });
+    }
+});
+
 app.listen(1997);
