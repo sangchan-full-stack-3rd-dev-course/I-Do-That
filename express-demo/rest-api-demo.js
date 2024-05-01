@@ -31,20 +31,31 @@ bookStore.set(3, book3);
 // 책 리스트 전체 조회
 app.get('/books', (req, res) => {
     let books = new Array();
+    let statusInfo = {
+        statusCode : 200,
+        errorMessage : ""
+    };
 
-    bookStore.forEach((key, value)=>{
-        books.push(
-            {
-                id : key,
-                title : value.title,
-                price : value.price,
-                publisher : value.publisher,
-                description : value.description
-            }
-        );
-    })
+    if (bookStore.size) {
+        bookStore.forEach((key, value)=>{
+            books.push(
+                {
+                    id : key,
+                    title : value.title,
+                    price : value.price,
+                    publisher : value.publisher,
+                    description : value.description
+                }
+            );
+        });
+    } else {
+        statusInfo.statusCode = 404;
+        statusInfo.errorMessage = "책이 존재하지 않습니다."
+    }
 
-    res.json({
+
+    res.status(statusInfo.statusCode).json({
+        error : statusInfo.errorMessage,
         books : books
     });
 });
@@ -75,12 +86,23 @@ app.post("/books", (req, res) => {
     let newBook = req.body;
     let id = bookStore.size + 1;
     
-    // 책 추가
-    bookStore.set(id, newBook);
-    
-    const successMsg = `${bookStore.get(id).title}이 정상적으로 등록되었습니다!`;
+    let statusInfo = {
+        statusCode : 200,
+        message : ""
+    };
 
-    res.json(successMsg);
+    if (newBook.title){
+        // 책 추가
+        bookStore.set(id, newBook);
+        statusInfo.message = `${bookStore.get(id).title}이 정상적으로 등록되었습니다!`;
+    } else {
+        statusInfo.message = "책 제목을 입력해 주세요!";
+        statusInfo.statusCode = 400;
+    }
+
+    res.status(statusInfo.statusCode).json({
+        massage : statusInfo.message
+    });
 });
 
 // 책 삭제하기
