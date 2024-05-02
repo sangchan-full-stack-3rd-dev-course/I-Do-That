@@ -24,7 +24,8 @@ channelMap.set(2, channel2);
 channelMap.set(3, channel3);
 
 // 개별 조회
-app.get("/channels/:id", (req, res) => {
+app.route("/channels/:id")
+.get((req, res) => {
     let {id} = req.params;
     id = parseInt(id);
 
@@ -46,10 +47,65 @@ app.get("/channels/:id", (req, res) => {
         message : result.msg,
         channel : channel
     });
+}).delete((req, res)=>{
+    let {id} = req.params;
+    id = parseInt(id);
+
+    let result = {
+        code : 200,
+        msg : ""
+    };
+
+    let channel = channelMap.get(id);
+
+    if (!channel) {
+        result.code = 404;
+        result.msg = "존재하지 않는 채널인데 어케 삭제해!"
+    } else {
+        channelMap.delete(id);
+        result.msg = `${channel.title} 채널을 삭제 했습니다!`;
+    }
+
+    res.status(result.code).json({
+        message : result.msg
+    });
+}).put((req, res)=>{
+    let {id} = req.params;
+    let { title } = req.body;
+
+    id = parseInt(id);
+
+    let result = {
+        code : 200,
+        msg : ""
+    };
+
+    let originTitle = "";
+    let channel = channelMap.get(id);
+
+    if (!channel) {
+        result.code = 404;
+        result.msg = "없는 채널인대 어케 수정해!"
+    } else {
+        if (!title){
+            result.code = 400;
+            result.msg = "제대로 바꿀 title을 입력해주세요!";
+        } else {
+            originTitle = channel.title;
+            channel.title = title;
+            channelMap.set(id,channel);
+            result.msg = `${originTitle} 에서 ${channel.title} 로 채널 title을 수정 했습니다!`;
+        }
+    }
+
+    res.status(result.code).json({
+        message : result.msg
+    });
 });
 
 // 전체 조회
-app.get("/channels", (req, res) => {
+app.route("/channels")
+.get((req, res) => {
     let channels = new Array();
 
     let result = {
@@ -76,10 +132,7 @@ app.get("/channels", (req, res) => {
         message : result.msg,
         channels : channels
     });
-});
-
-//  채널 생성
-app.post("/channels", (req, res) => {
+}).post((req, res) => {
     let { title, subscribes } = req.body;
 
     let result = {
@@ -111,63 +164,6 @@ app.post("/channels", (req, res) => {
             channelMap.set(channel, channelMap.size+1)
 
             result.msg = `${title} 채널이 성공적으로 생성되었습니다!`;
-        }
-    }
-
-    res.status(result.code).json({
-        message : result.msg
-    });
-});
-
-// 채널 삭제
-app.delete("/channels/:id", (req, res)=>{
-    let {id} = req.params;
-    id = parseInt(id);
-
-    let result = {
-        code : 200,
-        msg : ""
-    };
-
-    let channel = channelMap.get(id);
-
-    if (!channel) {
-        result.code = 404;
-        result.msg = "존재하지 않는 채널인데 어케 삭제해!"
-    } else {
-        channelMap.delete(id);
-        result.msg = `${channel.title} 채널을 삭제 했습니다!`;
-    }
-
-    res.status(result.code).json({
-        message : result.msg
-    });
-});
-
-// 채널 수정
-app.put("/channels/:id",(req, res)=>{
-    let {id} = req.params;
-    let { title } = req.body;
-
-    id = parseInt(id);
-
-    let result = {
-        code : 200,
-        msg : ""
-    };
-
-    let channel = channelMap.get(id);
-
-    if (!channel) {
-        result.code = 404;
-        result.msg = "없는 채널인대 어케 수정해!"
-    } else {
-        if (!title){
-            result.code = 400;
-            result.msg = "제대로 바꿀 title을 입력해주세요!";
-        } else {
-            channelMap.set(id,title);
-            result.msg = `${channel.title} 에서 ${title} 로 채널 title을 수정 했습니다!`;
         }
     }
 
