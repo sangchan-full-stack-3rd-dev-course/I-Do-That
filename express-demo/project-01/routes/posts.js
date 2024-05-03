@@ -1,5 +1,7 @@
 const express = require('express');
+const Result = require('../result/result');
 const router = express.Router();
+
 
 router.use(express.json());
 
@@ -39,16 +41,12 @@ router.route("/:id")
     let {id} = req.params;
     id = parseInt(id);
 
-    let result = {
-        code : 200,
-        msg : ""
-    };
+    let result = new Result();
 
     let post = postMap.get(id);
 
     if (!post) {
-        result.code = 404;
-        result.msg = "post is not found";
+        result.notFound("해당 게시글을 찾을 수 없습니다.");
     } else {
         post.id = id;
     }
@@ -61,19 +59,15 @@ router.route("/:id")
     let {id} = req.params;
     id = parseInt(id);
 
-    let result = {
-        code : 200,
-        msg : ""
-    };
+    let result = new Result();
 
     let post = postMap.get(id);
 
     if (!post) {
-        result.code = 404;
-        result.msg = "존재하지 않는 게시글입니다."
+        result.notFound("존재하지 않는 게시글입니다.");
     } else {
         postMap.delete(id);
-        result.msg = `[${post.title}] 게시글을 삭제 했습니다!`;
+        result.success(200, `[${post.title}] 게시글을 삭제 했습니다!`);
     }
 
     res.status(result.code).json({
@@ -85,25 +79,20 @@ router.route("/:id")
 
     id = parseInt(id);
 
-    let result = {
-        code : 200,
-        msg : ""
-    };
+    let result = new Result();
 
     let post = postMap.get(id);
 
     if (!post) {
-        result.code = 404;
-        result.msg = "게시글이 존재하지 않습니다요!"
+        result.notFound("게시글이 존재하지 않습니다요!");
     } else {
         if (!title || !content){
-            result.code = 400;
-            result.msg = "제대로 입력해주세요!";
+            result.badRequest("제대로 입력해주세요!");
         } else {
             post.title = title;
             post.content = content;
             postMap.set(id,post);
-            result.msg = `게시글을 수정 했습니다!`;
+            result.success(200, `게시글을 수정 했습니다!`);
         }
     }
 
@@ -119,14 +108,10 @@ router.route("/")
 
     let posts = new Array();
 
-    let result = {
-        code : 200,
-        msg : ""
-    };
+    let result = new Result();
 
     if (!postMap.size) {
-        result.code = 404;
-        result.msg = "아무 게시글도 없습니다";
+        result.notFound("그냥 게시글이 아무것도 없습니다");
     } else {
         postMap.forEach((value, index)=>{
             if (value.userId === userId){
@@ -143,8 +128,7 @@ router.route("/")
         });
 
         if (!posts.length){
-            result.code = 404;
-            result.msg = `[${userId}]님이 작성한 게시글이 존재하지 않습니다.`
+            result.notFound(`[${userId}]님이 작성한 게시글이 존재하지 않습니다.`);
         }
     }
 
@@ -155,14 +139,10 @@ router.route("/")
 }).post((req, res) => {
     let { title, view, content, userId } = req.body;
 
-    let result = {
-        code : 201,
-        msg : ""
-    };
+    let result = new Result();
 
     if (!title || !view || !content || !userId) {
-        result.code = 400;
-        result.msg = "다시 입력해주세요!";
+        result.badRequest("다시 입력해주세요!");
     } else {
         let post = {
             title : title,
@@ -173,7 +153,7 @@ router.route("/")
 
         postMap.set(postMap.size+1, post)
 
-        result.msg = `[${title}] 게시글이 성공적으로 생성되었습니다!`;
+        result.success(200, `[${title}] 게시글이 성공적으로 생성되었습니다!`);
     }
 
     res.status(result.code).json({
