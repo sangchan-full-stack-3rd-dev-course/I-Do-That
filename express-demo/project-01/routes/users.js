@@ -1,4 +1,5 @@
 const express = require('express');
+const Result = require('../result/result');
 const router = express.Router();
 
 let user1 = {
@@ -25,16 +26,12 @@ get((req, res) => {
     let {id} = req.params;
     id = parseInt(id);
     
-    let result = {
-        code : 200,
-        msg : ""
-    };
+    let result = new Result();
 
     let user = userMap.get(id);
 
     if (!user) {
-        result.code = 404;
-        result.msg = "해당 유저는 존재하지 않습니다."
+        result.notFound("해당 유저는 존재하지 않습니다.");
     } else {
         user.id = id;
     }
@@ -47,19 +44,15 @@ get((req, res) => {
     let {id} = req.params;
     id = parseInt(id);
 
-    let result = {
-        code : 200,
-        msg : ""
-    };
+    let result = new Result();
 
     let user = userMap.get(id);
 
     if (!user) {
-        result.code = 404;
-        result.msg = "해당 유저는 존재하지 않습니다."
+        result.notFound("해당 유저는 존재하지 않습니다.");
     } else {
         userMap.delete(id);
-        result.msg = `${user.name}님, 탈퇴 되었습니다!`;
+        result.success(200,`${user.name}님, 탈퇴 되었습니다!`);
     }
 
     res.status(result.code).json({
@@ -73,14 +66,10 @@ router.use(express.json());
 router.post("/join", (req, res) => {
     let { userId, name, password } = req.body;
     
-    let result = {
-        code : 201,
-        msg : ""
-    };
+    let result = new Result();
 
     if (!userId || !name || !password) {
-        result.code = 400;
-        result.msg = "다시 입력해주세요!"
+        result.badRequest("다시 입력해주세요!");
     } else {
         let isDuplicate = false;
 
@@ -91,11 +80,10 @@ router.post("/join", (req, res) => {
         });
 
         if (isDuplicate){
-            result.code = 400;
-            result.msg = "이미 가입된 ID입니다!"
+            result.badRequest("이미 가입된 ID입니다!");
         } else {
             userMap.set(userMap.size + 1 ,{userId, name, password});
-            result.msg = `${name}님, 가입을 환영합니다!`;
+            result.success(200, `${name}님, 가입을 환영합니다!`);
         }
     }
 
@@ -108,14 +96,10 @@ router.post("/join", (req, res) => {
 router.post("/login", (req, res) => {
     let { userId, password } = req.body;
 
-    let result = {
-        code : 200,
-        msg : ""
-    };
+    let result = new Result();
 
     if (!userId || !password) {
-        result.code = 400;
-        result.msg = "다시 입력해주세요!";
+        result.badRequest("다시 입력해주세요!");
     } else {
         let user = {};
         
@@ -126,14 +110,12 @@ router.post("/login", (req, res) => {
         });
 
         if (!Object.keys(user).length) {
-            result.code = 404;
-            result.msg = "존재하지 않는 유저입니다.";
+            result.notFound("존재하지 않는 유저입니다.");
         } else {
             if (user.password!==password){
-                result.code = 400;
-                result.msg = "비밀번호가 틀렸습니다.";
+                result.badRequest("비밀번호가 틀렸습니다.");
             } else {
-                result.msg = `${user.name}님, 로그인 되었습니다!`;
+                result.success(200, `${user.name}님, 로그인 되었습니다!`);
             }
         }
     }
