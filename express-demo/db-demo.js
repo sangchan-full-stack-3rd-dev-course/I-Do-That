@@ -13,7 +13,10 @@ const connection = mysql.createConnection({
 
 connection.query(
   'SELECT * FROM users',
-  function (err, results, fields) {
-    console.log(results);
+  (err, results, fields) => {
+    results.forEach((result,index)=>{
+      console.log("사용자"+(index+1));
+      console.log(result);
+    });
   }
 );
