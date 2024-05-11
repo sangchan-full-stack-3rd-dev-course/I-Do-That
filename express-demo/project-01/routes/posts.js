@@ -112,28 +112,29 @@ router.route("/")
     });
 }).post((req, res) => {
     // 게시글 생성
-    let { title, view, content, userId } = req.body;
+    let { title, content, userId } = req.body;
 
     let result = new Result();
 
-    if (!title || !view || !content || !userId) {
+    if (!title || !content || !userId) {
         result.badRequest("다시 입력해주세요!");
+        res.status(result.code).json({
+            message : result.msg
+        });
     } else {
-        let post = {
-            title : title,
-            view : view,
-            content : content,
-            userId : userId
-        };
-
-        postMap.set(postMap.size+1, post)
-
-        result.success(200, `[${title}] 게시글이 성공적으로 생성되었습니다!`);
+        let post = [title, content, userId];
+        let sql = `INSERT INTO posts(title,content,user_id) VALUES(?,?,?)`;
+        conn.query(sql,post,(err, results, fields)=>{
+            if (err) {
+                result.serverError("DB Error :" + err.message);
+            } else {
+                result.success(201, `[${title}] 게시글이 성공적으로 생성되었습니다!`);
+            }
+            res.status(result.code).json({
+                message : result.msg
+            });
+        });
     }
-
-    res.status(result.code).json({
-        message : result.msg
-    });
 });
 
 module.exports = router;
