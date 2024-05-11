@@ -51,47 +51,52 @@ get((req, res) => {
 // 가입
 router.use(express.json());
 router.post("/join", (req, res) => {
-    let { userId, name, password } = req.body;
+    let { email, name, password, birthday, phone } = req.body;
     
     let result = new Result();
 
-    if (!userId || !name || !password) {
+    if (!email || !name || !password || !birthday || !phone) {
         result.badRequest("다시 입력해주세요!");
-    } else {
-        let isDuplicate = false;
 
-        userMap.forEach((user)=>{
-            if (user.userId === userId){
-                isDuplicate = true;
+        res.status(result.code).json({
+            message : result.msg
+        })
+    } else {      
+        conn.query(`INSERT INTO users (email, name, psword, birthday, phone) VALUES (?,?,?,?,?)`, [email, name, password, birthday, phone], (err, results, fields)=>{
+            if (err) {
+                let msg = "";
+
+                if (err.message.includes("Duplicate")){
+                    msg = "이미 존재하는 이메일입니다.";
+                } else {
+                    msg = err.message;
+                }
+
+                result.serverError("DB Error :" + msg);
+            } else {
+                result.success(201, `${name}님, 가입을 환영합니다!`);
             }
+
+            res.status(result.code).json({
+                message : result.msg
+            });
         });
-
-        if (isDuplicate){
-            result.badRequest("이미 가입된 ID입니다!");
-        } else {
-            userMap.set(userMap.size + 1 ,{userId, name, password});
-            result.success(200, `${name}님, 가입을 환영합니다!`);
-        }
     }
-
-    res.status(result.code).json({
-        message : result.msg
-    })
 });
 
 // 로그인
 router.post("/login", (req, res) => {
-    let { userId, password } = req.body;
+    let { email, password } = req.body;
 
     let result = new Result();
 
-    if (!userId || !password) {
+    if (!email || !password) {
         result.badRequest("다시 입력해주세요!");
     } else {
         let user = {};
         
         userMap.forEach((usr)=>{
-            if (usr.userId === userId){
+            if (usr.email === email){
                 user = usr;
             }
         });
