@@ -80,35 +80,23 @@ router.route("/")
     // 특정 사용자의 전체 게시글 조회
     let {userId} = req.body;
 
-    let posts = new Array();
-
     let result = new Result();
 
-    if (!postMap.size) {
-        result.notFound("그냥 게시글이 아무것도 없습니다");
-    } else {
-        postMap.forEach((value, index)=>{
-            if (value.userId === userId){
-                posts.push(
-                    {
-                        id : index,
-                        title : value.title,
-                        view : value.view,
-                        content : value.content,
-                        userId : value.userId
-                    }
-                );
-            }
-        });
-
-        if (!posts.length){
-            result.notFound(`[${userId}]님이 작성한 게시글이 존재하지 않습니다.`);
+    let sql = 'SELECT * FROM posts WHERE user_id = ?';
+    let data = [userId];
+    conn.query(sql,data,(err, results, fields)=>{
+        if (err) {
+            result.serverError("DB Error :" + err.message);
+        } else if (!results.length) {
+            result.notFound("해당 사용자의 게시글이 존재하지 않습니다.");
+        } else {
+            result.success(200, "성공");
         }
-    }
 
-    res.status(result.code).json({
-        message : result.msg,
-        posts : posts
+        res.status(result.code).json({
+            message : result.msg,
+            posts : results
+        });
     });
 }).post((req, res) => {
     // 게시글 생성
