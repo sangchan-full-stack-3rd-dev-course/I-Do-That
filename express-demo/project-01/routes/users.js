@@ -94,29 +94,24 @@ router.post("/login", (req, res) => {
 
     if (!email || !password) {
         result.badRequest("다시 입력해주세요!");
-    } else {
-        let user = {};
-        
-        userMap.forEach((usr)=>{
-            if (usr.email === email){
-                user = usr;
-            }
+        res.status(result.code).json({
+            message : result.msg
         });
-
-        if (!Object.keys(user).length) {
-            result.notFound("존재하지 않는 유저입니다.");
-        } else {
-            if (user.password!==password){
-                result.badRequest("비밀번호가 틀렸습니다.");
+    } else {
+        conn.query(`SELECT * FROM users WHERE email = ? AND psword = ?`, [email, password], (err, results, fields) => {
+            if (err) {
+                result.serverError("DB Error :" + err.message);
+            } else if (!results.length) {
+                result.notFound("이메일 또는 비밀번호가 틀렸습니다.");
             } else {
-                result.success(200, `${user.name}님, 로그인 되었습니다!`);
+                result.success(200, `${results[0].name}님, 로그인 되었습니다!`);
             }
-        }
-    }
 
-    res.status(result.code).json({
-        message : result.msg
-    });
+            res.status(result.code).json({
+                message : result.msg
+            });
+        });
+    }
 });
 
 module.exports = router;
