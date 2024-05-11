@@ -2,43 +2,29 @@ const express = require('express');
 const Result = require('../result/result');
 const router = express.Router();
 
-let user1 = {
-    userId : "gkgk00142",
-    name : "헝컹이",
-    password : "1234"
-}
-
-let user2 = {
-    userId : "gkgk00143",
-    name : "헝컹둘",
-    password : "12345"
-}
-
-
-let userMap = new Map();
-
-userMap.set(1, user1);
-userMap.set(2, user2);
+const conn = require('../db/connection');
 
 // 개별 조회
 router.route("/:id").
 get((req, res) => {
     let {id} = req.params;
     id = parseInt(id);
-    
+
     let result = new Result();
 
-    let user = userMap.get(id);
+    conn.query(`SELECT * FROM users WHERE id = ?`, id, (err, results, fields)=>{
+        if (err) {
+            result.serverError("DB Error :" + err.message);
+        } else if (!results.length) {
+            result.notFound("해당 유저는 존재하지 않습니다.");
+        } else {
+            result.success(200, "성공");
+        }
 
-    if (!user) {
-        result.notFound("해당 유저는 존재하지 않습니다.");
-    } else {
-        user.id = id;
-    }
-
-    res.status(result.code).json({
-        message : result.msg,
-        user : user
+        res.status(result.code).json({
+            message : result.msg,
+            user : results[0]
+        });
     });
 }).delete((req, res)=>{
     let {id} = req.params;
@@ -46,17 +32,18 @@ get((req, res) => {
 
     let result = new Result();
 
-    let user = userMap.get(id);
-
-    if (!user) {
-        result.notFound("해당 유저는 존재하지 않습니다.");
-    } else {
-        userMap.delete(id);
-        result.success(200,`${user.name}님, 탈퇴 되었습니다!`);
-    }
-
-    res.status(result.code).json({
-        message : result.msg
+    conn.query(`DELETE FROM users WHERE id = ?`, id,(err, results, fields)=>{
+        if (err) {
+            result.serverError("DB Error :" + err.message);
+        } else if (!results[0].affectedRows == 0) {
+            result.notFound("해당 유저는 존재하지 않습니다.");
+        } else {
+            result.success(200, "유저 삭제 성공");
+        }
+        
+        res.status(result.code).json({
+            message : result.msg
+        });
     });
 });
 
