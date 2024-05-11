@@ -1,61 +1,34 @@
 const express = require('express');
 const Result = require('../result/result');
 const router = express.Router();
-
-
 router.use(express.json());
 
-// Map 초기 데이터 -----------
-
-let post1 = {
-    title : "first BBa",
-    view : 1000,
-    content : "안녕하세요. 첫번째 게시글입니다.",
-    userId : "gkgk00142"
-};
-
-let post2 = {
-    title : "내가분탕이될께",
-    view : 24000,
-    content : "뜌따! 뜌따따! 뜌우따! 우따야!",
-    userId : "gkgk00143"
-};
-
-let post3 = {
-    title : "코딩고수가될거야",
-    view : 920,
-    content : "코딩을 배우고싶어요!",
-    userId : "gkgk00142"
-}
-
-let postMap = new Map();
-
-postMap.set(1, post1);
-postMap.set(2, post2);
-postMap.set(3, post3);
-
-// Map 초기 데이터 -----------
+const conn = require('../db/connection');
 
 router.route("/:id")
 .get((req, res) => {
+    // 게시글 개별 조회
     let {id} = req.params;
     id = parseInt(id);
 
     let result = new Result();
 
-    let post = postMap.get(id);
+    conn.query(`SELECT * FROM posts WHERE id = ?`, id, (err, results, fields)=>{
+        if (err) {
+            result.serverError("DB Error :" + err.message);
+        } else if (!results.length) {
+            result.notFound("해당 게시글은 존재하지 않습니다.");
+        } else {
+            result.success(200, "성공");
+        }
 
-    if (!post) {
-        result.notFound("해당 게시글을 찾을 수 없습니다.");
-    } else {
-        post.id = id;
-    }
-
-    res.status(result.code).json({
-        message : result.msg,
-        post : post
+        res.status(result.code).json({
+            message : result.msg,
+            post : results[0]
+        });
     });
 }).delete((req, res)=>{
+    // 게시글 삭제
     let {id} = req.params;
     id = parseInt(id);
 
@@ -74,6 +47,7 @@ router.route("/:id")
         message : result.msg
     });
 }).put((req, res)=>{
+    // 게시글 수정
     let {id} = req.params;
     let { title, content } = req.body;
 
@@ -101,9 +75,9 @@ router.route("/:id")
     });
 });
 
-// 전체 조회
 router.route("/")
 .get((req, res) => {
+    // 특정 사용자의 전체 게시글 조회
     let {userId} = req.body;
 
     let posts = new Array();
@@ -137,6 +111,7 @@ router.route("/")
         posts : posts
     });
 }).post((req, res) => {
+    // 게시글 생성
     let { title, view, content, userId } = req.body;
 
     let result = new Result();
