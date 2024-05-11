@@ -34,17 +34,20 @@ router.route("/:id")
 
     let result = new Result();
 
-    let post = postMap.get(id);
+    let sql = 'DELETE FROM posts WHERE id = ?';
+    let data = [id];
+    conn.query(sql,data,(err, results, fields)=>{
+        if (err) {
+            result.serverError("DB Error :" + err.message);
+        } else if (!results.affectedRows) {
+            result.notFound("해당 게시글은 존재하지 않습니다.");
+        } else {
+            result.success(200, "게시글 삭제 성공");
+        }
 
-    if (!post) {
-        result.notFound("존재하지 않는 게시글입니다.");
-    } else {
-        postMap.delete(id);
-        result.success(200, `[${post.title}] 게시글을 삭제 했습니다!`);
-    }
-
-    res.status(result.code).json({
-        message : result.msg
+        res.status(result.code).json({
+            message : result.msg
+        });
     });
 }).put((req, res)=>{
     // 게시글 수정
