@@ -55,24 +55,28 @@ router.route("/:id")
 
     let result = new Result();
 
-    let post = postMap.get(id);
-
-    if (!post) {
-        result.notFound("게시글이 존재하지 않습니다요!");
-    } else {
-        if (!title || !content){
-            result.badRequest("제대로 입력해주세요!");
-        } else {
-            post.title = title;
-            post.content = content;
-            postMap.set(id,post);
-            result.success(200, `게시글을 수정 했습니다!`);
-        }
+    if (!title || !content){
+        result.badRequest("제대로 입력해주세요!");
+        res.status(result.code).json({
+            message : result.msg
+        });
+    } else{
+        let sql = 'UPDATE posts SET title = ?, content = ? WHERE id = ?';
+        let data = [title, content, id];
+        conn.query(sql,data,(err, results, fields)=>{
+            if (err) {
+                result.serverError("DB Error :" + err.message);
+            } else if (!results.affectedRows) {
+                result.notFound("해당 게시글은 존재하지 않습니다.");
+            } else {
+                result.success(200, "게시글 수정 성공");
+            }
+    
+            res.status(result.code).json({
+                message : result.msg
+            });
+        });
     }
-
-    res.status(result.code).json({
-        message : result.msg
-    });
 });
 
 router.route("/")
