@@ -35,11 +35,13 @@ get((req, res) => {
     conn.query(`DELETE FROM users WHERE id = ?`, id,(err, results, fields)=>{
         if (err) {
             result.serverError("DB Error :" + err.message);
-        } else if (!results[0].affectedRows == 0) {
+        } else if (!results.affectedRows) {
             result.notFound("해당 유저는 존재하지 않습니다.");
         } else {
             result.success(200, "유저 삭제 성공");
         }
+
+        console.log(results);
         
         res.status(result.code).json({
             message : result.msg
