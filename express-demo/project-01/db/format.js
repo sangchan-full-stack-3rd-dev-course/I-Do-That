@@ -1,5 +1,6 @@
 let sql = '';
     let data = [];
-    conn.query(sql,data,(err, results, fields)=>{
+    let func = (err, results, fields)=>{
 
-    });
+    };
+    conn.query(sql,data,func);
