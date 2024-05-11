@@ -1,12 +1,14 @@
 const express = require('express');
 const Result = require('../result/result');
 const router = express.Router();
+router.use(express.json());
 
 const conn = require('../db/connection');
 
-// 개별 조회
+
 router.route("/:id").
 get((req, res) => {
+    // 개별 조회
     let {id} = req.params;
     id = parseInt(id);
 
@@ -27,6 +29,7 @@ get((req, res) => {
         });
     });
 }).delete((req, res)=>{
+    // 사용자 삭제
     let {id} = req.params;
     id = parseInt(id);
 
@@ -49,10 +52,8 @@ get((req, res) => {
     });
 });
 
-
-// 가입
-router.use(express.json());
 router.post("/join", (req, res) => {
+    // 가입
     let { email, name, password, birthday, phone } = req.body;
     
     let result = new Result();
@@ -86,8 +87,8 @@ router.post("/join", (req, res) => {
     }
 });
 
-// 로그인
 router.post("/login", (req, res) => {
+    // 로그인
     let { email, password } = req.body;
 
     let result = new Result();
