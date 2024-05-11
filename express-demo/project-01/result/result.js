@@ -24,6 +24,11 @@ class Result{
         this.msg = msg;
     }
 
+    serverError(msg){
+        this.code = 500;
+        this.msg = msg;
+    }
+
     success(code, msg){
         this.code = code;
         this.msg = msg;
