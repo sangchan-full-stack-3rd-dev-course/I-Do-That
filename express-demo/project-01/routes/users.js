@@ -14,7 +14,9 @@ get((req, res) => {
 
     let result = new Result();
 
-    conn.query(`SELECT * FROM users WHERE id = ?`, id, (err, results, fields)=>{
+    let sql = `SELECT * FROM users WHERE id = ?`;
+    let data = [id];
+    let func = (err, results, fields)=>{
         if (err) {
             result.serverError("DB Error :" + err.message);
         } else if (!results.length) {
@@ -27,7 +29,9 @@ get((req, res) => {
             message : result.msg,
             user : results[0]
         });
-    });
+    }
+
+    conn.query(sql, data, func);
 }).delete((req, res)=>{
     // 사용자 삭제
     let {id} = req.params;
@@ -35,7 +39,9 @@ get((req, res) => {
 
     let result = new Result();
 
-    conn.query(`DELETE FROM users WHERE id = ?`, id,(err, results, fields)=>{
+    let sql = `DELETE FROM users WHERE id = ?`;
+    let data = [id];
+    let func = (err, results, fields)=>{
         if (err) {
             result.serverError("DB Error :" + err.message);
         } else if (!results.affectedRows) {
@@ -43,13 +49,13 @@ get((req, res) => {
         } else {
             result.success(200, "유저 삭제 성공");
         }
-
-        console.log(results);
         
         res.status(result.code).json({
             message : result.msg
         });
-    });
+    }
+    
+    conn.query(sql, data, func);
 });
 
 router.post("/join", (req, res) => {
@@ -65,7 +71,9 @@ router.post("/join", (req, res) => {
             message : result.msg
         })
     } else {      
-        conn.query(`INSERT INTO users (email, name, psword, birthday, phone) VALUES (?,?,?,?,?)`, [email, name, password, birthday, phone], (err, results, fields)=>{
+        let sql = `INSERT INTO users (email, name, psword, birthday, phone) VALUES (?,?,?,?,?)`;
+        let data = [email, name, password, birthday, phone];
+        let func = (err, results, fields)=>{
             if (err) {
                 let msg = "";
 
@@ -83,7 +91,9 @@ router.post("/join", (req, res) => {
             res.status(result.code).json({
                 message : result.msg
             });
-        });
+        }
+
+        conn.query(sql, data, func);
     }
 });
 
@@ -99,7 +109,9 @@ router.post("/login", (req, res) => {
             message : result.msg
         });
     } else {
-        conn.query(`SELECT * FROM users WHERE email = ? AND psword = ?`, [email, password], (err, results, fields) => {
+        let sql = `SELECT * FROM users WHERE email = ? AND psword = ?`;
+        let data = [email, password];
+        let func = (err, results, fields) => {
             if (err) {
                 result.serverError("DB Error :" + err.message);
             } else if (!results.length) {
@@ -111,7 +123,9 @@ router.post("/login", (req, res) => {
             res.status(result.code).json({
                 message : result.msg
             });
-        });
+        }
+
+        conn.query(sql, data, func);
     }
 });
 

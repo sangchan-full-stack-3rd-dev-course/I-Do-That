@@ -13,7 +13,9 @@ router.route("/:id")
 
     let result = new Result();
 
-    conn.query(`SELECT * FROM posts WHERE id = ?`, id, (err, results, fields)=>{
+    let sql = `SELECT * FROM posts WHERE id = ?`;
+    let data = [id];
+    let func = (err, results, fields)=>{
         if (err) {
             result.serverError("DB Error :" + err.message);
         } else if (!results.length) {
@@ -26,7 +28,9 @@ router.route("/:id")
             message : result.msg,
             post : results[0]
         });
-    });
+    }
+
+    conn.query(sql, data, func);
 }).delete((req, res)=>{
     // 게시글 삭제
     let {id} = req.params;
@@ -36,7 +40,7 @@ router.route("/:id")
 
     let sql = 'DELETE FROM posts WHERE id = ?';
     let data = [id];
-    conn.query(sql,data,(err, results, fields)=>{
+    let func = (err, results, fields)=>{
         if (err) {
             result.serverError("DB Error :" + err.message);
         } else if (!results.affectedRows) {
@@ -48,7 +52,9 @@ router.route("/:id")
         res.status(result.code).json({
             message : result.msg
         });
-    });
+    }
+    
+    conn.query(sql,data,func);
 }).put((req, res)=>{
     // 게시글 수정
     let {id} = req.params;
@@ -66,7 +72,7 @@ router.route("/:id")
     } else{
         let sql = 'UPDATE posts SET title = ?, content = ? WHERE id = ?';
         let data = [title, content, id];
-        conn.query(sql,data,(err, results, fields)=>{
+        let func = (err, results, fields)=>{
             if (err) {
                 result.serverError("DB Error :" + err.message);
             } else if (!results.affectedRows) {
@@ -78,7 +84,8 @@ router.route("/:id")
             res.status(result.code).json({
                 message : result.msg
             });
-        });
+        }
+        conn.query(sql,data,func);
     }
 });
 
@@ -91,7 +98,7 @@ router.route("/")
 
     let sql = 'SELECT * FROM posts WHERE user_id = ?';
     let data = [userId];
-    conn.query(sql,data,(err, results, fields)=>{
+    let func = (err, results, fields)=>{
         if (err) {
             result.serverError("DB Error :" + err.message);
         } else if (!results.length) {
@@ -104,7 +111,8 @@ router.route("/")
             message : result.msg,
             posts : results
         });
-    });
+    }
+    conn.query(sql,data,func);
 }).post((req, res) => {
     // 게시글 생성
     let { title, content, userId } = req.body;
@@ -119,7 +127,7 @@ router.route("/")
     } else {
         let post = [title, content, userId];
         let sql = `INSERT INTO posts(title,content,user_id) VALUES(?,?,?)`;
-        conn.query(sql,post,(err, results, fields)=>{
+        let func = (err, results, fields)=>{
             if (err) {
                 result.serverError("DB Error :" + err.message);
             } else {
@@ -128,7 +136,8 @@ router.route("/")
             res.status(result.code).json({
                 message : result.msg
             });
-        });
+        }
+        conn.query(sql,post,func);
     }
 });
 
