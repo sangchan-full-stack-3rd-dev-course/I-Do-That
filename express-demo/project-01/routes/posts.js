@@ -1,6 +1,8 @@
 const express = require('express');
 const Result = require('../result/result');
 const router = express.Router();
+const { body, validationResult } = require('express-validator');
+
 router.use(express.json());
 
 const conn = require('../db/connection');
@@ -90,7 +92,15 @@ router.route("/:id")
 });
 
 router.route("/")
-.get((req, res) => {
+.get([
+        body('userId').notEmpty().isInt().withMessage('userId 제대로 입력!')
+    ],(req, res) => {
+    const err = validationResult(req);
+
+    if (!err.isEmpty()) {
+        res.status(400).json(err.array());
+        return;
+    }
     // 특정 사용자의 전체 게시글 조회
     let {userId} = req.body;
 
@@ -113,32 +123,35 @@ router.route("/")
         });
     }
     conn.query(sql,data,func);
-}).post((req, res) => {
-    // 게시글 생성
-    let { title, content, userId } = req.body;
+}).post([
+            body('title').notEmpty().withMessage("제목을 입력해주세요."),
+            body('content').notEmpty().withMessage("내용을 입력해주세요."),
+            body('userId').notEmpty().isInt().withMessage('userId 제대로 입력!')
+        ],(req, res) => {
+            const err = validationResult(req);
 
-    let result = new Result();
-
-    if (!title || !content || !userId) {
-        result.badRequest("다시 입력해주세요!");
-        res.status(result.code).json({
-            message : result.msg
-        });
-    } else {
-        let post = [title, content, userId];
-        let sql = `INSERT INTO posts(title,content,user_id) VALUES(?,?,?)`;
-        let func = (err, results, fields)=>{
-            if (err) {
-                result.serverError("DB Error :" + err.message);
-            } else {
-                result.success(201, `[${title}] 게시글이 성공적으로 생성되었습니다!`);
+            if (!err.isEmpty()) {
+                res.status(400).json(err.array());
+                return;
             }
-            res.status(result.code).json({
-                message : result.msg
-            });
-        }
-        conn.query(sql,post,func);
-    }
+            // 게시글 생성
+            let { title, content, userId } = req.body;
+
+            let result = new Result();
+
+            let post = [title, content, userId];
+            let sql = `INSERT INTO posts(title,content,user_id) VALUES(?,?,?)`;
+            let func = (err, results, fields)=>{
+                if (err) {
+                    result.serverError("DB Error :" + err.message);
+                } else {
+                    result.success(201, `[${title}] 게시글이 성공적으로 생성되었습니다!`);
+                }
+                res.status(result.code).json({
+                    message : result.msg
+                });
+            }
+            conn.query(sql,post,func);
 });
 
 module.exports = router;

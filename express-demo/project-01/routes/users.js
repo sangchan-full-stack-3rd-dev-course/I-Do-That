@@ -1,13 +1,23 @@
 const express = require('express');
 const Result = require('../result/result');
 const router = express.Router();
-router.use(express.json());
-
+const { body, validationResult } = require('express-validator');
 const conn = require('../db/connection');
 
+router.use(express.json());
 
-router.route("/:id").
-get((req, res) => {
+// 왜 안됨?
+// const validate = (req, res) => {
+//     const err = validationResult(req);
+
+//     if (!err.isEmpty()) {
+//         res.status(400).json(err.array());
+//         return;
+//     }
+// };
+
+router.route("/:id")
+.get((req, res) => {
     // 개별 조회
     let {id} = req.params;
     id = parseInt(id);
@@ -32,7 +42,8 @@ get((req, res) => {
     }
 
     conn.query(sql, data, func);
-}).delete((req, res)=>{
+})
+.delete((req, res)=>{
     // 사용자 삭제
     let {id} = req.params;
     id = parseInt(id);
@@ -58,19 +69,27 @@ get((req, res) => {
     conn.query(sql, data, func);
 });
 
-router.post("/join", (req, res) => {
-    // 가입
-    let { email, name, password, birthday, phone } = req.body;
-    
-    let result = new Result();
+router.route("/join")
+.post( 
+    [
+        body('email').isEmail().withMessage("이메일 형식이 아닙니다."),
+        body('name').notEmpty().withMessage("이름을 입력해주세요."),
+        body('password').notEmpty().withMessage("비밀번호를 입력해주세요."),
+        body('birthday').notEmpty().withMessage("생년월일을 입력해주세요."),
+        body('phone').notEmpty().withMessage("전화번호를 입력해주세요.")
+    ]
+    ,(req, res) => {
+        const err = validationResult(req);
 
-    if (!email || !name || !password || !birthday || !phone) {
-        result.badRequest("다시 입력해주세요!");
+        if (!err.isEmpty()) {
+            res.status(400).json(err.array());
+            return;
+        }
+        // 가입
+        let { email, name, password, birthday, phone } = req.body;
 
-        res.status(result.code).json({
-            message : result.msg
-        })
-    } else {      
+        let result = new Result();
+        
         let sql = `INSERT INTO users (email, name, psword, birthday, phone) VALUES (?,?,?,?,?)`;
         let data = [email, name, password, birthday, phone];
         let func = (err, results, fields)=>{
@@ -94,10 +113,20 @@ router.post("/join", (req, res) => {
         }
 
         conn.query(sql, data, func);
-    }
 });
 
-router.post("/login", (req, res) => {
+router.route("/login")
+.post(
+    [
+       body('email').isEmail().withMessage("이메일 형식이 아닙니다."),
+       body('password').notEmpty().withMessage("비밀번호를 입력해주세요.")  
+    ],(req, res) => {
+    const err = validationResult(req);
+
+    if (!err.isEmpty()) {
+        res.status(400).json(err.array());
+        return;
+    }
     // 로그인
     let { email, password } = req.body;
 
