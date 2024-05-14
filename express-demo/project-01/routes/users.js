@@ -1,20 +1,11 @@
 const express = require('express');
-const Result = require('../result/result');
+const Result = require('../utils/result');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const conn = require('../db/connection');
+const validate = require('../utils/validate');
 
 router.use(express.json());
-
-// 왜 안됨?
-// const validate = (req, res) => {
-//     const err = validationResult(req);
-
-//     if (!err.isEmpty()) {
-//         res.status(400).json(err.array());
-//         return;
-//     }
-// };
 
 router.route("/:id")
 .get((req, res) => {
@@ -76,15 +67,10 @@ router.route("/join")
         body('name').notEmpty().withMessage("이름을 입력해주세요."),
         body('password').notEmpty().withMessage("비밀번호를 입력해주세요."),
         body('birthday').notEmpty().withMessage("생년월일을 입력해주세요."),
-        body('phone').notEmpty().withMessage("전화번호를 입력해주세요.")
+        body('phone').notEmpty().withMessage("전화번호를 입력해주세요."),
+        validate
     ]
-    ,(req, res) => {
-        const err = validationResult(req);
-
-        if (!err.isEmpty()) {
-            res.status(400).json(err.array());
-            return;
-        }
+    ,(req, res, next) => {
         // 가입
         let { email, name, password, birthday, phone } = req.body;
 
@@ -119,43 +105,30 @@ router.route("/login")
 .post(
     [
        body('email').isEmail().withMessage("이메일 형식이 아닙니다."),
-       body('password').notEmpty().withMessage("비밀번호를 입력해주세요.")  
-    ],(req, res) => {
-    const err = validationResult(req);
-
-    if (!err.isEmpty()) {
-        res.status(400).json(err.array());
-        return;
-    }
+       body('password').notEmpty().withMessage("비밀번호를 입력해주세요."),
+       validate
+    ],(req, res, next) => {
     // 로그인
     let { email, password } = req.body;
 
     let result = new Result();
+    
+    let sql = `SELECT * FROM users WHERE email = ? AND psword = ?`;
+    let data = [email, password];
+    let func = (err, results, fields) => {
+        if (err) {
+            result.serverError("DB Error :" + err.message);
+        } else if (!results.length) {
+            result.notFound("이메일 또는 비밀번호가 틀렸습니다.");
+        } else {
+            result.success(200, `${results[0].name}님, 로그인 되었습니다!`);
+        }
 
-    if (!email || !password) {
-        result.badRequest("다시 입력해주세요!");
         res.status(result.code).json({
             message : result.msg
         });
-    } else {
-        let sql = `SELECT * FROM users WHERE email = ? AND psword = ?`;
-        let data = [email, password];
-        let func = (err, results, fields) => {
-            if (err) {
-                result.serverError("DB Error :" + err.message);
-            } else if (!results.length) {
-                result.notFound("이메일 또는 비밀번호가 틀렸습니다.");
-            } else {
-                result.success(200, `${results[0].name}님, 로그인 되었습니다!`);
-            }
-
-            res.status(result.code).json({
-                message : result.msg
-            });
-        }
-
-        conn.query(sql, data, func);
     }
+    conn.query(sql, data, func);
 });
 
 module.exports = router;
