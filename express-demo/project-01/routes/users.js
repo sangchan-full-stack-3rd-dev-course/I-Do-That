@@ -4,6 +4,9 @@ const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const conn = require('../db/connection');
 const validate = require('../utils/validate');
+let jwt = require('jsonwebtoken');
+const dotenv = require('dotenv');
+dotenv.config();
 
 router.use(express.json());
 
@@ -112,7 +115,7 @@ router.route("/login")
     let { email, password } = req.body;
 
     let result = new Result();
-    
+
     let sql = `SELECT * FROM users WHERE email = ? AND psword = ?`;
     let data = [email, password];
     let func = (err, results, fields) => {
@@ -121,11 +124,25 @@ router.route("/login")
         } else if (!results.length) {
             result.notFound("이메일 또는 비밀번호가 틀렸습니다.");
         } else {
+            let loginUser = results[0];
+
+            let payload = {
+                id : loginUser.id,
+                email : loginUser.email,
+                name : loginUser.name
+            };
+
+            let token = jwt.sign(payload, process.env.SECRET_KEY);
+
+            console.log(token);
+            // 쿠키에 token 저장해주기
+            // res.cookie()
+
             result.success(200, `${results[0].name}님, 로그인 되었습니다!`);
         }
 
         res.status(result.code).json({
-            message : result.msg
+            message : result.msg,
         });
     }
     conn.query(sql, data, func);
