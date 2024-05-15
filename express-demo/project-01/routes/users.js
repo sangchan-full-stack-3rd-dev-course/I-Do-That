@@ -132,11 +132,16 @@ router.route("/login")
                 name : loginUser.name
             };
 
-            let token = jwt.sign(payload, process.env.SECRET_KEY);
+            let tokenOptions = {
+                expiresIn : '2 days',
+                issuer : 'Me'
+            }
+
+            let token = jwt.sign(payload, process.env.SECRET_KEY, tokenOptions);
 
             console.log(token);
-            // 쿠키에 token 저장해주기
-            // res.cookie()
+
+            res.cookie("jwt", token, { httpOnly : true })
 
             result.success(200, `${results[0].name}님, 로그인 되었습니다!`);
         }
